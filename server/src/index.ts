@@ -1,17 +1,25 @@
-import express from "express";
-import { Server } from "socket.io";
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import { handleSocketConnection } from './socket';
 
 const app = express();
+app.use(cors());
 
-const server = app.listen(3000, () => {
-  console.log("Server is running on port 3000");
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
 });
 
-const io = new Server(server);
+io.on('connection', (socket) => {
+  handleSocketConnection(io, socket);
+});
 
-io.on("connection", (socket) => {
-  console.log("a user connected");
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
-  });
+const PORT = 3001;
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
